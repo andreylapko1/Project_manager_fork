@@ -1,8 +1,11 @@
-from rest_framework.generics import ListCreateAPIView
+from urllib import request
+
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 
 from apps.tasks.models import Task
-from apps.tasks.serializers.tasks_serializers import AllTasksSerializer, CreateTaskSerializer
+from apps.tasks.serializers.tasks_serializers import AllTasksSerializer, CreateUpdateTaskSerializer, \
+    TaskDetailSerializer
 
 
 class TasksListPaginator(PageNumberPagination):
@@ -18,7 +21,7 @@ class AllTasksListAPIView(ListCreateAPIView):
         if self.request.method == 'GET':
             return AllTasksSerializer
         elif self.request.method == 'POST':
-            return CreateTaskSerializer
+            return CreateUpdateTaskSerializer
 
     def filter_queryset(self, queryset):
         project_name = self.request.query_params.get('project')
@@ -28,3 +31,15 @@ class AllTasksListAPIView(ListCreateAPIView):
         if employee_name:
             queryset = queryset.filter(assignee__name=employee_name)
         return queryset
+
+
+class TasksDetailAPIView(RetrieveAPIView):
+    pagination_class = TasksListPaginator
+    queryset = Task.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return TaskDetailSerializer
+        if self.request.method in ['UPDATE', 'DELETE', 'PUT']:
+            return CreateUpdateTaskSerializer
+

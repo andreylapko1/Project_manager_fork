@@ -15,3 +15,9 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
         model = Project
         fields = 'name', 'description', 'created_at', 'count_of_files'
 
+
+class ProjectShortInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = ('name', 'created_at')
+

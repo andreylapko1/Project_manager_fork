@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from apps.projects.models import ProjectFile, Project
+from apps.projects.serializers.project_serializer import ProjectShortInfoSerializer
 from apps.projects.utils.upload_file_helpers import EXTENSTIONS, check_extension, check_file_size, save_file, \
     create_file_path
 
@@ -56,3 +57,11 @@ class CreateProjectFileSerializer(serializers.ModelSerializer):
         project_file.projects.add(project)
 
         return project_file
+
+
+class ProjectFileDetailSerializer(serializers.ModelSerializer):
+    project = ProjectShortInfoSerializer(many=True)
+
+    class Meta:
+        model = ProjectFile
+        fields = ('name', 'created_at')
