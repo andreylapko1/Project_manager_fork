@@ -1,8 +1,11 @@
 from rest_framework import status
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from apps.projects.models import ProjectFile
-from apps.projects.serializers.project_file_serializers import AllProjectFilesSerializer, CreateProjectFileSerializer
+from apps.projects.serializers.project_file_serializers import AllProjectFilesSerializer, CreateProjectFileSerializer, \
+    ProjectFileDetailSerializer
 
 
 class ProjectFileListAPIView(APIView):
@@ -32,3 +35,7 @@ class ProjectFileListAPIView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ProjectFileDetailGenericView(RetrieveDestroyAPIView):
+    queryset = ProjectFile.objects.all()
+    serializer_class = ProjectFileDetailSerializer

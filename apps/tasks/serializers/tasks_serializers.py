@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from django.utils import timezone
 from apps.projects.models import Project
+from apps.projects.serializers.project_serializer import ProjectShortInfoSerializer
 from apps.tasks.choices.priority import PriorityEnum
 from apps.tasks.models import Task, Tag
 
@@ -29,11 +30,12 @@ class AllTasksSerializer(serializers.ModelSerializer):
         ]
 
 
-class CreateTaskSerializer(serializers.ModelSerializer):
+class CreateUpdateTaskSerializer(serializers.ModelSerializer):
     project = serializers.SlugRelatedField(
         slug_field='name',
         queryset=Project.objects.all(),
     )
+
 
     class Meta:
         model = Task
@@ -63,15 +65,15 @@ class CreateTaskSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Priority must be one of: {}'.format(PriorityEnum.choices_values()))
         return value
 
+
     def validate_project(self, value):
         result = Project.objects.filter(name=value)
         if not result:
-            raise serializers.ValidationError('Project does not exist')
-        return value
+            raise serializers.ValidationError('Project {} not found'.format(value))
+        return result
 
     def validate_tag(self, value):
         all_unique_tags_name = Tag.objects.filter(name__in=value)
-
         if not all_unique_tags_name:
             raise serializers.ValidationError('Tags not found')
         return value
@@ -88,3 +90,19 @@ class CreateTaskSerializer(serializers.ModelSerializer):
         instance = Task.objects.create(**validated_data)
         instance.tag.set(tags)
         return instance
+
+    def update(self, instance, validated_data):
+        tags = validated_data.pop('tag', [])
+        instance.tag.set(tags)
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        instance.save()
+        return instance
+
+
+
+class TaskDetailSerializer(serializers.ModelSerializer):
+    project = ProjectShortInfoSerializer()
+    class Meta:
+        model = Task
+        exclude = ("updated_at", "deleted_at")
